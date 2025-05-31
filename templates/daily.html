@@ -1,0 +1,276 @@
+{% extends "base.html" %}
+
+{% block title %}المتابعة اليومية - تطبيق المالية{% endblock %}
+
+{% block content %}
+<div class="daily-container">
+    <!-- ملخص سريع -->
+<div class="summary-cards">
+    <!-- بطاقة الدخل -->
+    <div class="stat-card income">
+        <div class="stat-icon">💰</div>
+        <div class="stat-info">
+            <div class="stat-label">الدخل</div>
+            <div class="stat-amount">{{ summary['دخل'].get('total', 0)|format_money }}</div>
+            <div class="stat-count">{{ summary['دخل'].get('count', 0) }} عملية</div>
+        </div>
+    </div>
+
+    <!-- بطاقة المصروف -->
+    <div class="stat-card expense">
+        <div class="stat-icon">📊</div>
+        <div class="stat-info">
+            <div class="stat-label">المصروف</div>
+            <div class="stat-amount">{{ summary['مصروف'].get('total', 0)|format_money }}</div>
+            <div class="stat-count">{{ summary['مصروف'].get('count', 0) }} عملية</div>
+        </div>
+    </div>
+
+    <!-- بطاقة التوفير -->
+    <div class="stat-card saving">
+        <div class="stat-icon">💎</div>
+        <div class="stat-info">
+            <div class="stat-label">التوفير</div>
+            <div class="stat-amount">{{ summary['توفير'].get('total', 0)|format_money }}</div>
+            <div class="stat-count">{{ summary['توفير'].get('count', 0) }} عملية</div>
+        </div>
+    </div>
+
+    <!-- بطاقة الرصيد -->
+    <div class="stat-card balance">
+        <div class="stat-icon">⚖️</div>
+        <div class="stat-info">
+            <div class="stat-label">الرصيد</div>
+            <div class="stat-amount">{{ summary['الرصيد']|format_money }}</div>
+            <div class="stat-trend">
+                {% if summary['الرصيد'] > 0 %}
+                    <span class="positive">▲</span>
+                {% else %}
+                    <span class="negative">▼</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+    <!-- نموذج إضافة عملية -->
+    <div class="form-section">
+        <div class="section-header">
+            <h3>إضافة عملية جديدة</h3>
+            <button class="btn-toggle" onclick="toggleForm()">
+                <span id="formToggleIcon">▼</span>
+            </button>
+        </div>
+        <form id="addForm" method="post" action="{{ url_for('daily.add_record') }}" onsubmit="return validateForm()">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>النوع:</label>
+                    <select name="type" required onchange="updateFormStyle(this.value)">
+                        <option value="دخل">دخل</option>
+                        <option value="مصروف">مصروف</option>
+                        <option value="توفير">توفير</option>
+                        <option value="إعانة">إعانة</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>التصنيف:</label>
+                    <select name="category" required>
+                        {% for cat in categories %}
+                            <option value="{{ cat[0] }}">{{ cat[0] }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>المبلغ:</label>
+                    <input type="number" step="0.01" name="amount" required min="0.01">
+                </div>
+                <div class="form-group">
+                    <label>التاريخ:</label>
+                    <input type="date" name="date" required value="{{ today }}">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>ملاحظة:</label>
+                <input type="text" name="note" placeholder="أضف ملاحظة (اختياري)">
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">إضافة العملية</button>
+                <button type="reset" class="btn btn-light">مسح النموذج</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- قسم الفلترة -->
+    <div class="filter-section">
+        <div class="section-header">
+            <h3>خيارات البحث والفلترة</h3>
+            <button class="btn-toggle" onclick="toggleFilter()">
+                <span id="filterToggleIcon">▼</span>
+            </button>
+        </div>
+        <form id="filterForm" method="get" action="{{ url_for('daily.daily_home') }}">
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label>الفترة:</label>
+                    <select name="period" onchange="this.form.submit()">
+                        <option value="all" {% if period=='all' %}selected{% endif %}>كل العمليات</option>
+                        <option value="today" {% if period=='today' %}selected{% endif %}>اليوم</option>
+                        <option value="week" {% if period=='week' %}selected{% endif %}>هذا الأسبوع</option>
+                        <option value="month" {% if period=='month' %}selected{% endif %}>هذا الشهر</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>النوع:</label>
+                    <select name="filter_type" onchange="this.form.submit()">
+                        <option value="">كل الأنواع</option>
+                        <option value="دخل" {% if filter_type=='دخل' %}selected{% endif %}>دخل</option>
+                        <option value="مصروف" {% if filter_type=='مصروف' %}selected{% endif %}>مصروف</option>
+                        <option value="توفير" {% if filter_type=='توفير' %}selected{% endif %}>توفير</option>
+                        <option value="إعانة" {% if filter_type=='إعانة' %}selected{% endif %}>إعانة</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>التصنيف:</label>
+                    <select name="filter_category" onchange="this.form.submit()">
+                        <option value="">كل التصنيفات</option>
+                        {% for cat in categories %}
+                            <option value="{{ cat[0] }}" {% if filter_category==cat[0] %}selected{% endif %}>
+                                {{ cat[0] }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label>المبلغ من:</label>
+                    <input type="number" step="0.01" name="min_amount" value="{{ min_amount }}">
+                </div>
+                <div class="filter-group">
+                    <label>المبلغ إلى:</label>
+                    <input type="number" step="0.01" name="max_amount" value="{{ max_amount }}">
+                </div>
+                <div class="filter-group search-group">
+                    <label>بحث في الملاحظات:</label>
+                    <input type="text" name="search" value="{{ search }}" 
+                           placeholder="اكتب كلمة للبحث...">
+                </div>
+            </div>
+            <div class="filter-actions">
+                <button type="submit" class="btn btn-secondary">تطبيق الفلتر</button>
+                <a href="{{ url_for('daily.daily_home') }}" class="btn btn-light">مسح الفلتر</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- عرض العمليات -->
+    {% for date, data in grouped_records.items() %}
+    <div class="date-group">
+        <div class="date-header">
+            <h3>{{ date }}</h3>
+            <div class="daily-totals">
+                {% if data['totals']['دخل'] > 0 %}
+                    <span class="total income">
+                        <i class="icon">💰</i>
+                        {{ data['totals']['دخل']|format_money }}
+                    </span>
+                {% endif %}
+                {% if data['totals']['مصروف'] > 0 %}
+                    <span class="total expense">
+                        <i class="icon">📊</i>
+                        {{ data['totals']['مصروف']|format_money }}
+                    </span>
+                {% endif %}
+                {% if data['totals']['توفير'] > 0 %}
+                    <span class="total saving">
+                        <i class="icon">💎</i>
+                        {{ data['totals']['توفير']|format_money }}
+                    </span>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>النوع</th>
+                        <th>التصنيف</th>
+                        <th>المبلغ</th>
+                        <th>ملاحظة</th>
+                        <th>إجراءات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for record in data['records'] %}
+                    <tr class="record-row {{ record['type'] }}-row">
+                        <td>
+                            <span class="type-badge {{ record['type'] }}">{{ record['type'] }}</span>
+                        </td>
+                        <td>{{ record['category'] }}</td>
+                        <td class="amount {{ record['type'] }}-amount">
+                            {{ record['amount']|format_money }}
+                        </td>
+                        <td class="note">{{ record['note'] or "—" }}</td>
+                        <td class="actions">
+                            <a href="{{ url_for('daily.edit_record', record_id=record['id']) }}" 
+                               class="btn btn-sm btn-edit" title="تعديل">
+                                ✏️
+                            </a>
+                            <form method="post" 
+                                  action="{{ url_for('daily.delete_record', record_id=record['id']) }}" 
+                                  style="display:inline;"
+                                  onsubmit="return confirm('هل أنت متأكد من حذف هذه العملية؟')">
+                                <button type="submit" class="btn btn-sm btn-delete" title="حذف">
+                                    🗑️
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% else %}
+    <div class="no-records">
+        <div class="empty-state">
+            <div class="empty-icon">📝</div>
+            <h3>لا توجد عمليات</h3>
+            <p>لم يتم العثور على أي عمليات تطابق معايير البحث</p>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='app.js') }}"></script>
+<script>
+function toggleForm() {
+    const form = document.getElementById('addForm');
+    const icon = document.getElementById('formToggleIcon');
+    form.classList.toggle('hidden');
+    icon.textContent = form.classList.contains('hidden') ? '▼' : '▲';
+}
+
+function toggleFilter() {
+    const form = document.getElementById('filterForm');
+    const icon = document.getElementById('filterToggleIcon');
+    form.classList.toggle('hidden');
+    icon.textContent = form.classList.contains('hidden') ? '▼' : '▲';
+}
+
+function validateForm() {
+    const amount = document.querySelector('input[name="amount"]').value;
+    if (parseFloat(amount) <= 0) {
+        alert('المبلغ يجب أن يكون أكبر من صفر');
+        return false;
+    }
+    return true;
+}
+</script>
+{% endblock %}

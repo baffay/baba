@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}تطبيق المالية{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <nav class="main-nav">
+        <div class="nav-container">
+            <a href="{{ url_for('index') }}" class="logo">💰</a>
+            <div class="nav-links">
+                <a href="{{ url_for('index') }}" class="nav-link {% if request.endpoint == 'index' %}active{% endif %}">
+                    <span class="icon">🏠</span>
+                    الرئيسية
+                </a>
+                <a href="{{ url_for('daily.daily_home') }}" class="nav-link {% if request.blueprint == 'daily' %}active{% endif %}">
+                    <span class="icon">📊</span>
+                    المتابعة اليومية
+                </a>
+                <a href="{{ url_for('categories.categories_home') }}" class="nav-link {% if request.blueprint == 'categories' %}active{% endif %}">
+                    <span class="icon">🏷️</span>
+                    التصنيفات
+                </a>
+            </div>
+            <div class="user-info">
+                <span class="username">{{ g.user if g.user else 'baffay' }}</span>
+                <span class="current-time" id="currentTime"></span>
+            </div>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flashes">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">
+                            {{ message }}
+                            <button onclick="this.parentElement.style.display='none'" class="close-btn">&times;</button>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <script>
+        function updateTime() {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('ar-SA');
+            document.getElementById('currentTime').textContent = timeStr;
+        }
+        
+        setInterval(updateTime, 1000);
+        updateTime();
+
+        // إخفاء رسائل التنبيه تلقائياً بعد 5 ثواني
+        setTimeout(() => {
+            document.querySelectorAll('.alert').forEach(alert => {
+                alert.style.display = 'none';
+            });
+        }, 5000);
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

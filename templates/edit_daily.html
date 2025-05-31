@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}تعديل العملية - تطبيق المالية{% endblock %}
+
+{% block content %}
+<div class="edit-record-container">
+    <div class="page-header">
+        <h2>تعديل العملية</h2>
+        <a href="{{ url_for('daily.daily_home') }}" class="btn btn-light">
+            <span class="icon">←</span>
+            عودة
+        </a>
+    </div>
+
+    <div class="form-section">
+        <form method="post" action="{{ url_for('daily.update_record', record_id=record.id) }}" onsubmit="return validateForm()">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>النوع:</label>
+                    <select name="type" required onchange="updateFormStyle(this.value)">
+                        <option value="دخل" {% if record.type == 'دخل' %}selected{% endif %}>دخل</option>
+                        <option value="مصروف" {% if record.type == 'مصروف' %}selected{% endif %}>مصروف</option>
+                        <option value="توفير" {% if record.type == 'توفير' %}selected{% endif %}>توفير</option>
+                        <option value="إعانة" {% if record.type == 'إعانة' %}selected{% endif %}>إعانة</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>التصنيف:</label>
+                    <select name="category" required>
+                        {% for cat in categories %}
+                            <option value="{{ cat[0] }}" {% if record.category == cat[0] %}selected{% endif %}>
+                                {{ cat[0] }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>المبلغ:</label>
+                    <input type="number" step="0.01" name="amount" required min="0.01" 
+                           value="{{ record.amount }}">
+                </div>
+                <div class="form-group">
+                    <label>التاريخ:</label>
+                    <input type="date" name="date" required value="{{ record.date }}">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>ملاحظة:</label>
+                <input type="text" name="note" placeholder="أضف ملاحظة (اختياري)" 
+                       value="{{ record.note or '' }}">
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">حفظ التغييرات</button>
+                <a href="{{ url_for('daily.daily_home') }}" class="btn btn-light">إلغاء</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function validateForm() {
+    const amount = document.querySelector('input[name="amount"]').value;
+    if (parseFloat(amount) <= 0) {
+        alert('المبلغ يجب أن يكون أكبر من صفر');
+        return false;
+    }
+    return true;
+}
+
+function updateFormStyle(type) {
+    const form = document.querySelector('.form-section');
+    form.className = 'form-section ' + type.toLowerCase();
+}
+
+// تعيين النمط الأولي للنموذج
+document.addEventListener('DOMContentLoaded', function() {
+    const typeSelect = document.querySelector('select[name="type"]');
+    updateFormStyle(typeSelect.value);
+});
+</script>
+{% endblock %}

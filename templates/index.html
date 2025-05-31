@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block title %}الرئيسية - تطبيق المالية{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+    <section class="quick-stats">
+        <h2>إحصائيات اليوم</h2>
+        <div class="stats-grid">
+            <div class="stat-card income">
+                <div class="stat-icon">💰</div>
+                <h3>الدخل</h3>
+                <div class="stat-amount">{{ today_stats.get('دخل', 0)|format_money }}</div>
+            </div>
+            <div class="stat-card expense">
+                <div class="stat-icon">📊</div>
+                <h3>المصروف</h3>
+                <div class="stat-amount">{{ today_stats.get('مصروف', 0)|format_money }}</div>
+            </div>
+            <div class="stat-card saving">
+                <div class="stat-icon">💎</div>
+                <h3>التوفير</h3>
+                <div class="stat-amount">{{ today_stats.get('توفير', 0)|format_money }}</div>
+            </div>
+            <div class="stat-card balance">
+                <div class="stat-icon">⚖️</div>
+                <h3>الرصيد</h3>
+                <div class="stat-amount">
+                    {{ (today_stats.get('دخل', 0) - today_stats.get('مصروف', 0))|format_money }}
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="monthly-summary">
+        <h2>ملخص الشهر</h2>
+        <div class="stats-grid">
+            <div class="stat-card income">
+                <div class="stat-icon">💰</div>
+                <h3>الدخل الشهري</h3>
+                <div class="stat-amount">{{ month_stats.get('دخل', 0)|format_money }}</div>
+            </div>
+            <div class="stat-card expense">
+                <div class="stat-icon">📊</div>
+                <h3>المصروف الشهري</h3>
+                <div class="stat-amount">{{ month_stats.get('مصروف', 0)|format_money }}</div>
+            </div>
+            <div class="stat-card saving">
+                <div class="stat-icon">💎</div>
+                <h3>التوفير الشهري</h3>
+                <div class="stat-amount">{{ month_stats.get('توفير', 0)|format_money }}</div>
+            </div>
+            <div class="stat-card balance">
+                <div class="stat-icon">⚖️</div>
+                <h3>الرصيد الشهري</h3>
+                <div class="stat-amount">
+                    {{ (month_stats.get('دخل', 0) - month_stats.get('مصروف', 0))|format_money }}
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="recent-transactions">
+        <h2>آخر العمليات</h2>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>النوع</th>
+                        <th>التصنيف</th>
+                        <th>المبلغ</th>
+                        <th>التاريخ</th>
+                        <th>ملاحظة</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for transaction in recent_transactions %}
+                    <tr class="{{ transaction.type }}-row">
+                        <td>
+                            <span class="type-badge {{ transaction.type }}">{{ transaction.type }}</span>
+                        </td>
+                        <td>{{ transaction.category }}</td>
+                        <td class="amount">{{ transaction.amount|format_money }}</td>
+                        <td>{{ transaction.date }}</td>
+                        <td>{{ transaction.note or "—" }}</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="no-data">لا توجد عمليات حديثة</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="view-all">
+            <a href="{{ url_for('daily.daily_home') }}" class="btn btn-primary">
+                عرض كل العمليات
+                <span class="icon">→</span>
+            </a>
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.querySelectorAll('.stat-card').forEach(card => {
+    card.addEventListener('mouseover', () => {
+        card.style.transform = 'translateY(-5px)';
+    });
+    card.addEventListener('mouseout', () => {
+        card.style.transform = 'translateY(0)';
+    });
+});
+</script>
+{% endblock %}

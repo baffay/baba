@@ -1,0 +1,259 @@
+{% extends "base.html" %}
+
+{% block title %}التصنيفات - تطبيق المالية{% endblock %}
+
+{% block content %}
+<div class="categories-container">
+    <div class="page-header">
+        <h2>إدارة التصنيفات</h2>
+        <button class="btn btn-primary" onclick="showAddModal()">
+            <span class="icon">➕</span>
+            إضافة تصنيف جديد
+        </button>
+    </div>
+
+    <div class="categories-grid">
+        <!-- تصنيفات الدخل -->
+        <div class="category-section income-section">
+            <h3>تصنيفات الدخل</h3>
+            <div class="categories-list">
+                {% for category in categories['دخل'] %}
+                <div class="category-card income">
+                    <div class="category-info">
+                        <h4>{{ category.name }}</h4>
+                        <div class="category-stats">
+                            <span class="usage-count">{{ category.usage_count }} عملية</span>
+                            <span class="total-amount">{{ category.total_amount|format_money }}</span>
+                        </div>
+                    </div>
+                    <div class="category-actions">
+                        <button onclick="showEditModal({{ {
+                            'id': category.id,
+                            'name': category.name,
+                            'type': category.type
+                        }|tojson|safe }})" class="btn-icon" title="تعديل">✏️</button>
+                        {% if category.usage_count == 0 %}
+                        <form onsubmit="return confirm('هل أنت متأكد من حذف هذا التصنيف؟')"
+                              action="{{ url_for('categories.delete_category', category_id=category.id) }}"
+                              method="post"
+                              style="display: inline;">
+                            <button type="submit" class="btn-icon" title="حذف">🗑️</button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- تصنيفات المصروف -->
+        <div class="category-section expense-section">
+            <h3>تصنيفات المصروف</h3>
+            <div class="categories-list">
+                {% for category in categories['مصروف'] %}
+                <div class="category-card expense">
+                    <div class="category-info">
+                        <h4>{{ category.name }}</h4>
+                        <div class="category-stats">
+                            <span class="usage-count">{{ category.usage_count }} عملية</span>
+                            <span class="total-amount">{{ category.total_amount|format_money }}</span>
+                        </div>
+                    </div>
+                    <div class="category-actions">
+                        <button onclick="showEditModal({{ {
+                            'id': category.id,
+                            'name': category.name,
+                            'type': category.type
+                        }|tojson|safe }})" class="btn-icon" title="تعديل">✏️</button>
+                        {% if category.usage_count == 0 %}
+                        <form onsubmit="return confirm('هل أنت متأكد من حذف هذا التصنيف؟')"
+                              action="{{ url_for('categories.delete_category', category_id=category.id) }}"
+                              method="post"
+                              style="display: inline;">
+                            <button type="submit" class="btn-icon" title="حذف">🗑️</button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- تصنيفات التوفير -->
+        <div class="category-section saving-section">
+            <h3>تصنيفات التوفير</h3>
+            <div class="categories-list">
+                {% for category in categories['توفير'] %}
+                <div class="category-card saving">
+                    <div class="category-info">
+                        <h4>{{ category.name }}</h4>
+                        <div class="category-stats">
+                            <span class="usage-count">{{ category.usage_count }} عملية</span>
+                            <span class="total-amount">{{ category.total_amount|format_money }}</span>
+                        </div>
+                    </div>
+                    <div class="category-actions">
+                        <button onclick="showEditModal({{ {
+                            'id': category.id,
+                            'name': category.name,
+                            'type': category.type
+                        }|tojson|safe }})" class="btn-icon" title="تعديل">✏️</button>
+                        {% if category.usage_count == 0 %}
+                        <form onsubmit="return confirm('هل أنت متأكد من حذف هذا التصنيف؟')"
+                              action="{{ url_for('categories.delete_category', category_id=category.id) }}"
+                              method="post"
+                              style="display: inline;">
+                            <button type="submit" class="btn-icon" title="حذف">🗑️</button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- تصنيفات الإعانة -->
+        <div class="category-section aid-section">
+            <h3>تصنيفات الإعانة</h3>
+            <div class="categories-list">
+                {% for category in categories['إعانة'] %}
+                <div class="category-card aid">
+                    <div class="category-info">
+                        <h4>{{ category.name }}</h4>
+                        <div class="category-stats">
+                            <span class="usage-count">{{ category.usage_count }} عملية</span>
+                            <span class="total-amount">{{ category.total_amount|format_money }}</span>
+                        </div>
+                    </div>
+                    <div class="category-actions">
+                        <button onclick="showEditModal({{ {
+                            'id': category.id,
+                            'name': category.name,
+                            'type': category.type
+                        }|tojson|safe }})" class="btn-icon" title="تعديل">✏️</button>
+                        {% if category.usage_count == 0 %}
+                        <form onsubmit="return confirm('هل أنت متأكد من حذف هذا التصنيف؟')"
+                              action="{{ url_for('categories.delete_category', category_id=category.id) }}"
+                              method="post"
+                              style="display: inline;">
+                            <button type="submit" class="btn-icon" title="حذف">🗑️</button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- نموذج إضافة تصنيف جديد -->
+    <div id="addModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>إضافة تصنيف جديد</h3>
+                <span class="close" onclick="closeAddModal()">&times;</span>
+            </div>
+            <form action="{{ url_for('categories.add_category') }}" method="post">
+                <div class="form-group">
+                    <label>اسم التصنيف:</label>
+                    <input type="text" name="name" required minlength="2" maxlength="50">
+                </div>
+                <div class="form-group">
+                    <label>النوع:</label>
+                    <select name="type" required>
+                        <option value="دخل">دخل</option>
+                        <option value="مصروف">مصروف</option>
+                        <option value="توفير">توفير</option>
+                        <option value="إعانة">إعانة</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">إضافة</button>
+                    <button type="button" class="btn btn-light" onclick="closeAddModal()">إلغاء</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- نموذج تعديل التصنيف -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>تعديل التصنيف</h3>
+                <span class="close" onclick="closeEditModal()">&times;</span>
+            </div>
+            <form id="editForm" action="" method="post">
+                <input type="hidden" name="old_name" id="editOldName">
+                <div class="form-group">
+                    <label>اسم التصنيف:</label>
+                    <input type="text" name="name" id="editName" required minlength="2" maxlength="50">
+                </div>
+                <div class="form-group">
+                    <label>النوع:</label>
+                    <select name="type" id="editType" required>
+                        <option value="دخل">دخل</option>
+                        <option value="مصروف">مصروف</option>
+                        <option value="توفير">توفير</option>
+                        <option value="إعانة">إعانة</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">حفظ التغييرات</button>
+                    <button type="button" class="btn btn-light" onclick="closeEditModal()">إلغاء</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// نموذج الإضافة
+function showAddModal() {
+    document.getElementById('addModal').style.display = 'block';
+}
+
+function closeAddModal() {
+    document.getElementById('addModal').style.display = 'none';
+}
+
+// نموذج التعديل
+function showEditModal(category) {
+    const modal = document.getElementById('editModal');
+    const form = document.getElementById('editForm');
+    const oldNameInput = document.getElementById('editOldName');
+    const nameInput = document.getElementById('editName');
+    const typeInput = document.getElementById('editType');
+
+    // بناء رابط التعديل
+    form.action = `/categories/edit/${category.id}`;  // تغيير طريقة بناء الرابط
+    oldNameInput.value = category.name;
+    nameInput.value = category.name;
+    typeInput.value = category.type;
+
+    modal.style.display = 'block';
+}
+
+function closeEditModal() {
+    document.getElementById('editModal').style.display = 'none';
+}
+
+// إغلاق النوافذ المنبثقة عند النقر خارجها
+window.onclick = function(event) {
+    if (event.target.className === 'modal') {
+        event.target.style.display = 'none';
+    }
+}
+
+// تأثيرات حركية للبطاقات
+document.querySelectorAll('.category-card').forEach(card => {
+    card.addEventListener('mouseover', () => {
+        card.style.transform = 'translateY(-2px)';
+    });
+    card.addEventListener('mouseout', () => {
+        card.style.transform = 'translateY(0)';
+    });
+});
+</script>
+{% endblock %}
