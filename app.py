@@ -1,9 +1,4 @@
-from flask import Flask, render_template, g
-import sqlite3
-from datetime import datetime
-from routes.daily_routes import daily_bp
-from routes.categories_routes import categories_bp
-from config import Config
+
 
 app = Flask(__name__)
 app.config.from_object(Config)
